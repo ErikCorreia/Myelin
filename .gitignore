@@ -1,0 +1,5 @@
+/build
+/instuctions/**
+/llama.cpp
+/models/**
+/memory/**
