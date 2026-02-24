@@ -19,6 +19,7 @@ set(LLAMA_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(LLAMA_BUILD_SERVER OFF CACHE BOOL "" FORCE)
 
 # 2. Adiciona o subdiretório (precisa clonar o llama.cpp) 
+# https://github.com/ggml-org/llama.cpp
 add_subdirectory(llama.cpp)
 
 add_executable(
