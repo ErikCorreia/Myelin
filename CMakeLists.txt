@@ -3,6 +3,14 @@ project(Myelin LANGUAGES CXX C)
 
 set(CMAKE_CXX_STANDARD 17)
 
+# Lista de Dependencias
+include(FetchContent)
+FetchContent_declare(json GIT_REPOSITORY https://github.com/nlohmann/json.git GIT_TAG v3.11.3)
+FetchContent_declare(llama GIT_REPOSITORY https://github.com/ggml-org/llama.cpp.git GIT_TAG master)
+
+FetchContent_MakeAvailable(json)
+FetchContent_MakeAvailable(llama)
+
 set(IO_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/io/Logger.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/io/ConfigLoader.cpp
@@ -14,13 +22,9 @@ set(CORE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/core/ChatHistory.cpp
 )
 
-set(LLAMA_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(LLAMA_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(LLAMA_BUILD_SERVER OFF CACHE BOOL "" FORCE)
-
-# 2. Adiciona o subdiretório (precisa clonar o llama.cpp) 
-# https://github.com/ggml-org/llama.cpp
-add_subdirectory(llama.cpp)
+# set(LLAMA_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+# set(LLAMA_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+# set(LLAMA_BUILD_SERVER OFF CACHE BOOL "" FORCE)
 
 add_executable(
     Myelin 
@@ -37,7 +41,10 @@ target_include_directories(Myelin PRIVATE
     "src/io"
 )
 
-target_link_libraries(Myelin PRIVATE llama)
+target_link_libraries(Myelin PRIVATE 
+    llama
+    nlohmann_json::nlohmann_json
+)
 
 if(UNIX)
     target_link_libraries(Myelin PRIVATE m pthread dl)

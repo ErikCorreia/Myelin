@@ -14,7 +14,7 @@
         class ChatHistory {
             private:
                 std::vector<Message> messages;
-                std::string history_path = "memory/chat_history.txt";
+                std::string history_path = "/home/erik/Myelin/memory/chat_history.txt";
                 const size_t max_history = 10;
             public:
                 void add_message(const std::string &role, const std::string &content);

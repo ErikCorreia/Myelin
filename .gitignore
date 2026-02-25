@@ -1,5 +1,5 @@
 /build
-/instuctions/**
+/instructions/*.md
 /llama.cpp
 /models/**
 /memory/**
