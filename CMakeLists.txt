@@ -19,8 +19,9 @@ set(IO_SOURCES
 
 set(CORE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/core/LlamaEngine.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/core/ChatHistory.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/io/MemoryManager.cpp
+    # ${CMAKE_CURRENT_SOURCE_DIR}/src/core/ChatHistory.cpp
+    # ${CMAKE_CURRENT_SOURCE_DIR}/src/io/MemoryManager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/io/DatabaseManager.cpp
 )
 
 # set(LLAMA_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
@@ -34,6 +35,8 @@ add_executable(
     ${CORE_SOURCES}
 )
 
+find_package(SQLite3 REQUIRED)
+
 target_include_directories(Myelin PRIVATE 
     llama.cpp/include
     llama.cpp/common
@@ -45,6 +48,7 @@ target_include_directories(Myelin PRIVATE
 target_link_libraries(Myelin PRIVATE 
     llama
     nlohmann_json::nlohmann_json
+    SQLite::SQLite3
 )
 
 if(UNIX)

@@ -2,8 +2,7 @@
     #define LLAMA_ENGINE_HPP
     
     #include "llama.h"
-    #include "ChatHistory.hpp"
-    #include "MemoryManager.hpp"
+    #include "DatabaseManager.hpp"
     #include <string>
     #include <vector>
 
@@ -20,7 +19,7 @@
     
         class LlamaEngine {
             public:
-                LlamaEngine(const std::string& model_path, const EngineConfig& cfg, Myelin::IO::MemoryManager& shared_history);
+                LlamaEngine(const std::string& model_path, const EngineConfig& cfg, Myelin::IO::DatabaseManager& shared_history);
                 ~LlamaEngine();
     
                 void generateResponse(const std::string& user_input);
@@ -29,7 +28,8 @@
                 llama_model* model;
                 llama_context* ctx;
                 // Myelin::Core::ChatHistory history;
-                Myelin::IO::MemoryManager memory;
+                // Myelin::IO::MemoryManager memory;
+                Myelin::IO::DatabaseManager db;
                 const struct llama_vocab* vocab;
                 EngineConfig cfg;
     

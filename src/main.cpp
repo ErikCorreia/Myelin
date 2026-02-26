@@ -10,17 +10,18 @@ int main(){
     Logger::log(Logger::INFO, "Myelin inicializando...");
     
     // Myelin::Core::ChatHistory history;
-    MemoryManager memory("/home/erik/Myelin/memory/chat_history.json");
+    // MemoryManager memory("/home/erik/Myelin/chat_history.json");
+    DatabaseManager db("/home/erik/Myelin/memory/myelin.db");
 
     try {
         EngineConfig config = ConfigLoader::load_from_file("../config.ini");
         
         Logger::log(Logger::INFO, "Modelo configurado: " + config.model_path);
         
-        memory.load_from_disk();
+        // memory.load_from_disk();
         // history.load_from_file();
 
-        LlamaEngine ai(config.model_path, config, memory);
+        LlamaEngine ai(config.model_path, config, db);
         std::string input;
 
         while (true)

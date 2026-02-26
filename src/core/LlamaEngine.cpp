@@ -11,8 +11,7 @@ namespace fs = std::filesystem;
 
 namespace Myelin::Core
 {
-    // LlamaEngine::LlamaEngine(const std::string &model_path, const EngineConfig& config, ChatHistory& shared_history) : cfg(config), history(shared_history), n_past(0)
-    LlamaEngine::LlamaEngine(const std::string& model_path, const EngineConfig& config, Myelin::IO::MemoryManager& shared_memory) : cfg(config), memory(shared_memory), n_past(0)
+    LlamaEngine::LlamaEngine(const std::string& model_path, const EngineConfig& config, Myelin::IO::DatabaseManager& shared_db) : cfg(config), db(shared_db), n_past(0)
     {
         llama_backend_init();
 
@@ -54,15 +53,13 @@ namespace Myelin::Core
 
         if (is_first_run)
         {
-            std::string system_instructions = Myelin::IO::InstructionLoader::load_from_folder(cfg.instructions_path);
-            Myelin::IO::Logger::log(Myelin::IO::Logger::INFO, "Instruções carregadas. Tamanho em caracteres: " + std::to_string(system_instructions.length()));
+           std::string system_instr = Myelin::IO::InstructionLoader::load_from_folder(cfg.instructions_path);
+            Myelin::IO::Logger::log(Myelin::IO::Logger::INFO, "Instruções carregadas. Tamanho em caracteres: " + std::to_string(system_instr.length()));
 
-            prompt = memory.get_full_prompt(system_instructions);
+            prompt = "<|start_header_id|>system<|end_header_id|>\n\n" + system_instr + "<|eot_id|>";
 
             prompt += "<|start_header_id|>user<|end_header_id|>\n\n" + user_input + "<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n";
-        }
-        else
-        {
+        } else {
             prompt = "<|start_header_id|>user<|end_header_id|>\n\n" + user_input + "<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n";
         }
 
@@ -148,8 +145,9 @@ namespace Myelin::Core
             llama_batch_free(next_batch);
         }
 
-        memory.add_message("user", user_input);
-        memory.add_message("assistant", full_response);
+        db.add_message("user", user_input);
+        db.add_message("assistant", full_response);
+        
         llama_sampler_free(smpl);
         std::cout << std::endl;
     }
