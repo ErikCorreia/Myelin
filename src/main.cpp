@@ -9,24 +9,26 @@ using namespace Myelin::Core;
 int main(){
     Logger::log(Logger::INFO, "Myelin inicializando...");
     
-    Myelin::Core::ChatHistory history;
+    // Myelin::Core::ChatHistory history;
+    MemoryManager memory("/home/erik/Myelin/memory/chat_history.json");
 
     try {
         EngineConfig config = ConfigLoader::load_from_file("../config.ini");
         
         Logger::log(Logger::INFO, "Modelo configurado: " + config.model_path);
         
-        history.load_from_file();
-        // std::cout << "Memória carregada. Conversas anteriores: " << history.get_messages().size() << std::endl;
+        memory.load_from_disk();
+        // history.load_from_file();
 
-        LlamaEngine ai(config.model_path, config, history);
+        LlamaEngine ai(config.model_path, config, memory);
         std::string input;
 
         while (true)
         {
             std::cout << "\nVocê: ";
             std::getline(std::cin, input);
-            if(input == "sair") break;
+             if(input == "sair") break;
+            // if (!std::getline(std::cin, input) || input == "sair") break;
 
             ai.generateResponse(input);
         }

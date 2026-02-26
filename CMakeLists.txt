@@ -20,6 +20,7 @@ set(IO_SOURCES
 set(CORE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/core/LlamaEngine.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/core/ChatHistory.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/io/MemoryManager.cpp
 )
 
 # set(LLAMA_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)

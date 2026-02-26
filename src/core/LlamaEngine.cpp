@@ -1,27 +1,20 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <filesystem>
+
 #include "LlamaEngine.hpp"
 #include "InstructionLoader.hpp"
 #include "Logger.hpp"
-#include <iostream>
-#include <fstream>
-#include <filesystem>
-#include <sstream>
 
 namespace fs = std::filesystem;
 
-#ifdef _WIN32
-#include <windows.h>
-#endif
-
 namespace Myelin::Core
 {
-    LlamaEngine::LlamaEngine(const std::string &model_path, const EngineConfig& config, ChatHistory& shared_history) : cfg(config), history(shared_history), n_past(0)
+    // LlamaEngine::LlamaEngine(const std::string &model_path, const EngineConfig& config, ChatHistory& shared_history) : cfg(config), history(shared_history), n_past(0)
+    LlamaEngine::LlamaEngine(const std::string& model_path, const EngineConfig& config, Myelin::IO::MemoryManager& shared_memory) : cfg(config), memory(shared_memory), n_past(0)
     {
         llama_backend_init();
-
-        #ifdef _WIN32
-                SetConsoleOutputCP(CP_UTF8);
-                SetConsoleCP(CP_UTF8);
-        #endif
 
         auto m_params = llama_model_default_params();
 
@@ -64,11 +57,8 @@ namespace Myelin::Core
             std::string system_instructions = Myelin::IO::InstructionLoader::load_from_folder(cfg.instructions_path);
             Myelin::IO::Logger::log(Myelin::IO::Logger::INFO, "Instruções carregadas. Tamanho em caracteres: " + std::to_string(system_instructions.length()));
 
-            // Se quiser ver se os arquivos estão lá:
-            // std::cout << "DEBUG SYSTEM PROMPT:\n" << system_instructions << "\n--- END DEBUG ---" << std::endl;
+            prompt = memory.get_full_prompt(system_instructions);
 
-            prompt = "<|start_header_id|>system<|end_header_id|>\n\n" + system_instructions + "<|eot_id|>";
-            prompt += history.get_formatted_history();
             prompt += "<|start_header_id|>user<|end_header_id|>\n\n" + user_input + "<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n";
         }
         else
@@ -78,11 +68,11 @@ namespace Myelin::Core
 
         // Tokenização
         std::vector<llama_token> tokens(prompt.length() + 32);
-        int n_tokens = llama_tokenize(vocab, prompt.c_str(), (int)prompt.length(), tokens.data(), (int)tokens.size(), is_first_run, true);
+        int n_tokens = llama_tokenize(vocab, prompt.c_str(), (int)prompt.length(), tokens.data(), (int)tokens.size(), false, true);
         if (n_tokens < 0)
         {
             tokens.resize(-n_tokens);
-            n_tokens = llama_tokenize(vocab, prompt.c_str(), (int)prompt.length(), tokens.data(), (int)tokens.size(), is_first_run, true);
+            n_tokens = llama_tokenize(vocab, prompt.c_str(), (int)prompt.length(), tokens.data(), (int)tokens.size(), false, true);
         }
         tokens.resize(n_tokens);
 
@@ -158,8 +148,8 @@ namespace Myelin::Core
             llama_batch_free(next_batch);
         }
 
-        history.add_message("user", user_input);
-        history.add_message("assistant", full_response);
+        memory.add_message("user", user_input);
+        memory.add_message("assistant", full_response);
         llama_sampler_free(smpl);
         std::cout << std::endl;
     }
