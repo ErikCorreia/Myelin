@@ -1,4 +1,5 @@
 #include "DatabaseManager.hpp"
+#include "TextProcedure.hpp"
 
 namespace Myelin::IO
 {
@@ -85,15 +86,26 @@ namespace Myelin::IO
 
     std::string DatabaseManager::search_keyword_context(const std::string &query, int limit)
     {
+        auto keywords = TextProcessor::get_keywords(query);
+        if (keywords.empty())
+            return "";
+
         std::string context = "";
+        // Vamos buscar pela palavra mais longa da pergunta (geralmente a mais importante)
+        std::string main_keyword = *std::max_element(keywords.begin(), keywords.end(),
+                                                     [](const std::string &a, const std::string &b)
+                                                     {
+                                                         return a.length() < b.length();
+                                                     });
+
         std::string sql = "SELECT role, content FROM chat_history "
-                          "WHERE content LIKE ? AND LENGTH(content) > 10 "
+                          "WHERE content LIKE ? AND role != 'system' "
                           "ORDER BY id DESC LIMIT ?;";
 
         sqlite3_stmt *stmt;
         if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK)
         {
-            std::string search_term = "%" + query + "%";
+            std::string search_term = "%" + main_keyword + "%";
             sqlite3_bind_text(stmt, 1, search_term.c_str(), -1, SQLITE_STATIC);
             sqlite3_bind_int(stmt, 2, limit);
 
@@ -101,16 +113,11 @@ namespace Myelin::IO
             {
                 std::string role = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
                 std::string content = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1));
-
-                context += "[Lembrança de conversa anterior - " + role + "]: " + content + "\n";
+                context += "[" + role + " disse anteriormente]: " + content + "\n";
             }
         }
         sqlite3_finalize(stmt);
 
-        if (!context.empty())
-        {
-            return "\nContexto recuperado de conversas antigas:\n" + context + "\n";
-        }
-        return "";
+        return context.empty() ? "" : "\nContexto de memória recuperado:\n" + context;
     }
 }
