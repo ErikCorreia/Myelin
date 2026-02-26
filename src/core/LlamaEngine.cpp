@@ -56,7 +56,13 @@ namespace Myelin::Core
            std::string system_instr = Myelin::IO::InstructionLoader::load_from_folder(cfg.instructions_path);
             Myelin::IO::Logger::log(Myelin::IO::Logger::INFO, "Instruções carregadas. Tamanho em caracteres: " + std::to_string(system_instr.length()));
 
+            std::string search_context = db.search_keyword_context(user_input);
+
             prompt = "<|start_header_id|>system<|end_header_id|>\n\n" + system_instr + "<|eot_id|>";
+            
+            if (!search_context.empty()) {
+                prompt += "\n\nInformações importantes que você encontrou na sua memória de longo prazo:\n" + search_context;
+            }
 
             prompt += "<|start_header_id|>user<|end_header_id|>\n\n" + user_input + "<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n";
         } else {
