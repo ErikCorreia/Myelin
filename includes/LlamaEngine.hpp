@@ -3,6 +3,8 @@
     
     #include "llama.h"
     #include "DatabaseManager.hpp"
+    #include "EmbeddingEngine.hpp"
+
     #include <string>
     #include <vector>
 
@@ -19,7 +21,7 @@
     
         class LlamaEngine {
             public:
-                LlamaEngine(const std::string& model_path, const EngineConfig& cfg, Myelin::IO::DatabaseManager& shared_history);
+                LlamaEngine(const std::string& model_path, const EngineConfig& config, Myelin::IO::DatabaseManager& shared_db, EmbeddingEngine& emb_engine);
                 ~LlamaEngine();
     
                 void generateResponse(const std::string& user_input);
@@ -27,9 +29,8 @@
                 int n_past = 0;
                 llama_model* model;
                 llama_context* ctx;
-                // Myelin::Core::ChatHistory history;
-                // Myelin::IO::MemoryManager memory;
-                Myelin::IO::DatabaseManager db;
+                EmbeddingEngine& emb_engine;
+                Myelin::IO::DatabaseManager& db;
                 const struct llama_vocab* vocab;
                 EngineConfig cfg;
     

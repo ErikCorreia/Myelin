@@ -26,12 +26,15 @@ namespace Myelin::IO {
         DatabaseManager(const std::string& path);
         ~DatabaseManager();
     
-        bool add_message(const std::string& role, const std::string& content);
+        bool add_message(const std::string& role, const std::string& content, std::vector<float>& embedding);
         
         std::string search_keyword_context(const std::string& query, int limit = 3);
         std::vector<Message> get_recent_history(int limit = 10);
 
+        std::string search_semantic_context(const std::vector<float>& query_vector, float threshold, int limit);
+        
         void clear_history();
+
 
     };
 }

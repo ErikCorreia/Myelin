@@ -19,6 +19,7 @@ set(IO_SOURCES
 
 set(CORE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/core/LlamaEngine.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/core/EmbeddingEngine.cpp
     # ${CMAKE_CURRENT_SOURCE_DIR}/src/core/ChatHistory.cpp
     # ${CMAKE_CURRENT_SOURCE_DIR}/src/io/MemoryManager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/io/DatabaseManager.cpp
@@ -41,6 +42,7 @@ target_include_directories(Myelin PRIVATE
     llama.cpp/include
     llama.cpp/common
     "includes"
+    "src/utils"
     "src/core"
     "src/io"
 )

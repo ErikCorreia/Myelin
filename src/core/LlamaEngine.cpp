@@ -11,7 +11,7 @@ namespace fs = std::filesystem;
 
 namespace Myelin::Core
 {
-    LlamaEngine::LlamaEngine(const std::string& model_path, const EngineConfig& config, Myelin::IO::DatabaseManager& shared_db) : cfg(config), db(shared_db), n_past(0)
+    LlamaEngine::LlamaEngine(const std::string &model_path, const EngineConfig &config, Myelin::IO::DatabaseManager &shared_db, EmbeddingEngine &emb_engine) : cfg(config), db(shared_db), emb_engine(emb_engine), n_past(0)
     {
         llama_backend_init();
 
@@ -51,35 +51,40 @@ namespace Myelin::Core
         std::string prompt;
         bool is_first_run = (n_past == 0);
 
-        if (is_first_run)
-        {
-           std::string system_instr = Myelin::IO::InstructionLoader::load_from_folder(cfg.instructions_path);
-            Myelin::IO::Logger::log(Myelin::IO::Logger::INFO, "Instruções carregadas. Tamanho em caracteres: " + std::to_string(system_instr.length()));
+        // --- RAG: Busca semântica antes de montar o prompt ---
+        std::vector<float> query_vector = emb_engine.get_embedding(user_input);
+        std::string semantic_context = "";
 
-            std::string search_context = db.search_keyword_context(user_input);
+        if (!query_vector.empty()) {
+            semantic_context = db.search_semantic_context(query_vector, 0.70f, 3);
+        }
 
-            prompt = "<|start_header_id|>system<|end_header_id|>\n\n" + system_instr + "<|eot_id|>";
-            
-            if (!search_context.empty()) {
-                prompt += "\n\nInformações importantes que você encontrou na sua memória de longo prazo:\n" + search_context;
+        if (is_first_run) {
+            std::string system_instr = Myelin::IO::InstructionLoader::load_from_folder(cfg.instructions_path);
+
+            prompt = "<|start_header_id|>system<|end_header_id|>\n\n" + system_instr;
+
+            if (!semantic_context.empty()) {
+                prompt += "\n\n### MEMÓRIAS RECUPERADAS (ORDEM DE RELEVÂNCIA) ###\n";
+                prompt += "Use as datas abaixo para entender o contexto temporal das informações:\n";
+                prompt += semantic_context;
+                prompt += "\n### FIM DAS MEMÓRIAS ###\n";
             }
 
-            prompt += "<|start_header_id|>user<|end_header_id|>\n\n" + user_input + "<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n";
+            prompt += "<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n" + user_input + "<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n";
         } else {
             prompt = "<|start_header_id|>user<|end_header_id|>\n\n" + user_input + "<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n";
         }
 
-        // Tokenização
         std::vector<llama_token> tokens(prompt.length() + 32);
-        int n_tokens = llama_tokenize(vocab, prompt.c_str(), (int)prompt.length(), tokens.data(), (int)tokens.size(), false, true);
+        int n_tokens = llama_tokenize(vocab, prompt.c_str(), (int)prompt.length(), tokens.data(), (int)tokens.size(), is_first_run, true);
         if (n_tokens < 0)
         {
             tokens.resize(-n_tokens);
-            n_tokens = llama_tokenize(vocab, prompt.c_str(), (int)prompt.length(), tokens.data(), (int)tokens.size(), false, true);
+            n_tokens = llama_tokenize(vocab, prompt.c_str(), (int)prompt.length(), tokens.data(), (int)tokens.size(), is_first_run, true);
         }
         tokens.resize(n_tokens);
 
-        // Decode do Prompt
         for (int i = 0; i < (int)tokens.size(); i += cfg.n_batch)
         {
             int n_eval = std::min((int)tokens.size() - i, cfg.n_batch);
@@ -92,13 +97,8 @@ namespace Myelin::Core
                 batch.pos[j] = n_past + j;
                 batch.n_seq_id[j] = 1;
                 batch.seq_id[j][0] = 0;
-                batch.logits[j] = false;
+                batch.logits[j] = (j == n_eval - 1); // Logits apenas no último do batch
             }
-
-            Myelin::IO::Logger::log(Myelin::IO::Logger::INFO, "Total de tokens integrados ao KV Cache: " + std::to_string(n_past));
-
-            // Ativa logit apenas no último token do batch para o sampler
-            batch.logits[n_eval - 1] = true;
 
             if (llama_decode(ctx, batch) != 0)
             {
@@ -110,10 +110,6 @@ namespace Myelin::Core
             llama_batch_free(batch);
         }
 
-        auto end_prompt = std::chrono::high_resolution_clock::now();
-        Myelin::IO::Logger::log(Myelin::IO::Logger::INFO, "Prompt OK (" + std::to_string(std::chrono::duration<double>(end_prompt - start_time).count()) + "s)");
-
-        // Geração
         struct llama_sampler *smpl = llama_sampler_init_greedy();
         std::string full_response = "";
         std::cout << "Myelin: ";
@@ -133,7 +129,6 @@ namespace Myelin::Core
                 full_response += piece;
             }
 
-            // --- DECODE MANUAL DO NOVO TOKEN (Evita Crash) ---
             llama_batch next_batch = llama_batch_init(1, 0, 1);
             next_batch.n_tokens = 1;
             next_batch.token[0] = curr;
@@ -151,9 +146,30 @@ namespace Myelin::Core
             llama_batch_free(next_batch);
         }
 
-        db.add_message("user", user_input);
-        db.add_message("assistant", full_response);
-        
+        // --- SALVAMENTO PROTEGIDO ---
+        // 1. Salva User Input (já geramos o vetor no início do RAG)
+       auto trim = [](std::string s) {
+            s.erase(0, s.find_first_not_of(" \n\r\t"));
+            s.erase(s.find_last_not_of(" \n\r\t") + 1);
+            return s;
+        };
+
+        std::string clean_user = trim(user_input);
+        std::string clean_ai = trim(full_response);
+
+        if (!clean_user.empty()) {
+            db.add_message("user", clean_user, query_vector);
+        }
+
+        if (!clean_ai.empty()) {
+            std::vector<float> ai_emb = emb_engine.get_embedding(clean_ai);
+            db.add_message("assistant", clean_ai, ai_emb);
+        }
+
+        // std::vector<float> user_emb = emb_engine.get_embedding(user_input);
+        // std::cout << "[Debug] Tamanho do embedding gerado: " << user_emb.size() << std::endl;
+        // db.add_message("user", user_input, user_emb);
+
         llama_sampler_free(smpl);
         std::cout << std::endl;
     }
