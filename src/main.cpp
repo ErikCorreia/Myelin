@@ -4,6 +4,7 @@
 #include "EmbeddingEngine.hpp"
 #include <iostream>
 
+
 using namespace Myelin::IO;
 using namespace Myelin::Core;
 
@@ -29,6 +30,7 @@ int main(){
             ai.generateResponse(input);
         }
     } catch(const std::exception& e){
+        Logger::log(Logger::ERR, e.what());
         std::cout << "\nO programa encontrou um erro e será fechado. Pressione Enter para sair...";
         std::cin.get();
         return 1;

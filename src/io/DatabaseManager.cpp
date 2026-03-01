@@ -1,6 +1,8 @@
 #include "DatabaseManager.hpp"
 #include "TextProcedure.hpp"
 #include "VectorUtils.hpp"
+#include <chrono>
+#include <ctime>
 
 namespace Myelin::IO
 {
@@ -121,26 +123,49 @@ namespace Myelin::IO
 
     std::string DatabaseManager::search_semantic_context(const std::vector<float>& query_vector, float threshold, int limit) {
         std::string context = "";
-        std::string sql = "SELECT role, content, embedding, datetime(timestamp, 'localtime') FROM chat_history WHERE embedding IS NOT NULL;";
-        
+        auto now = std::chrono::system_clock::now();
+        std::time_t now_time = std::chrono::system_clock::to_time_t(now);
+
+        std::string sql = "SELECT role, content, embedding, strftime('%s', timestamp), datetime(timestamp, 'localtime') FROM chat_history WHERE embedding IS NOT NULL;";
+
         sqlite3_stmt* stmt;
         if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
             std::vector<std::pair<float, std::string>> matches;
 
             while (sqlite3_step(stmt) == SQLITE_ROW) {
-                std::string role = (const char*)sqlite3_column_text(stmt, 0);
-                std::string content = (const char*)sqlite3_column_text(stmt, 1);
-                std::string date = (const char*)sqlite3_column_text(stmt, 3);
+                long long msg_time = sqlite3_column_int64(stmt, 3);
+                float diff_seconds = static_cast<float>(now_time - msg_time);
+                float hours_age = diff_seconds / 3600.0f;
+
+                const char* role_ptr = (const char*)sqlite3_column_text(stmt, 0);
+                std::string role = role_ptr ? role_ptr : "unknown";
+
+                const char* content_ptr = (const char*)sqlite3_column_text(stmt, 1);
+                std::string content = content_ptr ? content_ptr : "";
                 
-                const float* blob_data = (const float*)sqlite3_column_blob(stmt, 2);
+                const char* date_ptr = (const char*)sqlite3_column_text(stmt, 4);
+                std::string date_str = date_ptr ? date_ptr : "data desconhecida";
+
+                const void* blob_ptr = sqlite3_column_blob(stmt, 2);
+                if (!blob_ptr) continue;
+
                 int blob_size = sqlite3_column_bytes(stmt, 2) / sizeof(float);
-                std::vector<float> stored_vector(blob_data, blob_data + blob_size);
+                const float* float_ptr = static_cast<const float*>(blob_ptr);
+                std::vector<float> stored_vector(float_ptr, float_ptr + blob_size);
 
                 float score = Myelin::Utils::VectorUtils::cosine_similarity(query_vector, stored_vector);
+                float decay_factor = Myelin::Utils::VectorUtils::time_decay(hours_age, 168.0f);
 
-                if (score >= threshold) {
-                    std::string memory_with_time = "[Memória de " + date + " - " + role + "]: " + content;
-                    matches.push_back({score, memory_with_time});
+                float final_score = score * decay_factor;
+                
+                // std::cout << "[RAG Debug] Msg: " << content.substr(0, 20) 
+                //     << " | Sim: " << score 
+                //     << " | Decay: " << decay_factor 
+                //     << " | Final: " << final_score << std::endl;
+                    
+                if (final_score >= threshold) {
+                    std::string memory_entry = "[Memória de " + date_str + " - " + role + "]: " + content;
+                    matches.push_back({final_score, memory_entry});
                 }
             }
             sqlite3_finalize(stmt);

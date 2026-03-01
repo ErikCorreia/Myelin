@@ -56,7 +56,8 @@ namespace Myelin::Core
         std::string semantic_context = "";
 
         if (!query_vector.empty()) {
-            semantic_context = db.search_semantic_context(query_vector, 0.70f, 3);
+            semantic_context = db.search_semantic_context(query_vector, 0.4f, 3);
+            // semantic_context = db.search_semantic_context(query_vector, 0.70f, 3);
         }
 
         if (is_first_run) {

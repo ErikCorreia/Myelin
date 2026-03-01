@@ -1,11 +1,17 @@
 <mxfile host="65bd71144e">
     <diagram id="cqJ4UJKB4v74NgAWzW2R" name="Página-1">
-        <mxGraphModel dx="1278" dy="971" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+        <mxGraphModel dx="1036" dy="159" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
+                <mxCell id="73" value="" style="edgeStyle=none;html=1;entryX=-0.001;entryY=0.612;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" target="15">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="49.99999999999977" y="570" as="sourcePoint"/>
+                        <mxPoint x="125" y="570" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
                 <mxCell id="2" value="Nucleo de Inferencia&lt;div&gt;(llama.cpp&lt;span style=&quot;color: rgb(63, 63, 63); background-color: transparent;&quot;&gt;)&lt;/span&gt;&lt;/div&gt;" style="whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
-                    <mxGeometry x="30" y="450" width="110" height="110" as="geometry"/>
+                    <mxGeometry x="-60" y="530" width="110" height="110" as="geometry"/>
                 </mxCell>
                 <mxCell id="19" value="" style="edgeStyle=none;html=1;" parent="1" source="15" target="18" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
@@ -25,7 +31,7 @@
                 <mxCell id="29" value="" style="edgeStyle=none;html=1;" parent="15" source="20" target="25" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="41" value="" style="edgeStyle=none;html=1;" edge="1" parent="15">
+                <mxCell id="41" value="" style="edgeStyle=none;html=1;" parent="15" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="162" y="250" as="sourcePoint"/>
                         <mxPoint x="209" y="250" as="targetPoint"/>
@@ -49,19 +55,19 @@
                 <mxCell id="25" value="Instruções&amp;nbsp;&lt;div&gt;e&lt;div&gt;contexto&lt;/div&gt;&lt;/div&gt;" style="whiteSpace=wrap;html=1;" parent="15" vertex="1">
                     <mxGeometry x="214" y="90" width="120" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="40" value="" style="edgeStyle=none;html=1;exitX=-0.006;exitY=0.363;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="15" source="31">
+                <mxCell id="40" value="" style="edgeStyle=none;html=1;exitX=-0.006;exitY=0.363;exitDx=0;exitDy=0;exitPerimeter=0;" parent="15" source="31" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="207" y="230" as="sourcePoint"/>
                         <mxPoint x="160" y="230" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="46" value="" style="edgeStyle=none;html=1;entryX=0.006;entryY=0.697;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="15" source="31" target="37">
+                <mxCell id="46" value="" style="edgeStyle=none;html=1;entryX=0.006;entryY=0.697;entryDx=0;entryDy=0;entryPerimeter=0;" parent="15" source="31" target="37" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="31" value="Entrada/saida&lt;div&gt;(Interação com o usuário)&lt;/div&gt;&lt;div&gt;TXT/AUD&lt;/div&gt;" style="whiteSpace=wrap;html=1;" parent="15" vertex="1">
                     <mxGeometry x="209" y="205" width="130" height="70" as="geometry"/>
                 </mxCell>
-                <mxCell id="37" value="Camada de segurança e validaçao de intensão para execução de ações" style="whiteSpace=wrap;html=1;" vertex="1" parent="15">
+                <mxCell id="37" value="Camada de segurança e validaçao de intensão para execução de ações" style="whiteSpace=wrap;html=1;" parent="15" vertex="1">
                     <mxGeometry x="370" y="30" width="130" height="300" as="geometry"/>
                 </mxCell>
                 <mxCell id="18" value="Horizontal Container" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
@@ -75,6 +81,12 @@
                 </mxCell>
                 <mxCell id="35" value="Agents" style="shape=module;align=left;spacingLeft=20;align=center;verticalAlign=top;whiteSpace=wrap;html=1;" parent="18" vertex="1">
                     <mxGeometry x="41" y="220" width="119" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="69" value="" style="edgeStyle=none;html=1;entryX=1;entryY=0.545;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="202" y="600.0358490566036" as="sourcePoint"/>
+                        <mxPoint x="49.99999999999977" y="600" as="targetPoint"/>
+                    </mxGeometry>
                 </mxCell>
             </root>
         </mxGraphModel>
