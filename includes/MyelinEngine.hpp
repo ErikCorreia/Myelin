@@ -37,6 +37,7 @@ namespace Myelin::Core
         ContextManager contextManager;
         MemoryArchivist archivist;
         std::string last_response;
+        int current_session_id;
     };
 }
 #endif

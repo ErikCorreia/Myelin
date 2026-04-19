@@ -29,10 +29,13 @@ namespace Myelin::IO
         DatabaseManager(const std::string &path);
         ~DatabaseManager();
 
-        bool add_message(const std::string &role, const std::string &content, const std::vector<float> &embedding);
-
         std::string search_keyword_context(const std::string &query, int limit = 3);
         std::vector<Message> get_recent_history(int limit = 10);
+
+        int create_session(const std::string &title);
+        bool add_message(int session_id, const std::string &role, const std::string &content, const std::vector<float> &embedding);
+        std::string get_session_chats(int session_id, int limit);
+        std::string search_semantic_global(const std::vector<float> &query_vector, float threshold, int limit, int exclude_session);
 
         std::string search_semantic_context(const std::vector<float> &query_vector, float threshold, int limit);
         std::string get_recent_chats(int limit);

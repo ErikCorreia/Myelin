@@ -1,6 +1,5 @@
 #include "MyelinEngine.hpp"
 #include "MyelinEngine.hpp"
-#include "InstructionLoader.hpp"
 #include "Logger.hpp"
 
 #include <future>
@@ -18,6 +17,8 @@ namespace Myelin::Core
     {
         Myelin::IO::Logger::log(Myelin::IO::Logger::INFO, "Myelin: Orquestrando resposta...");
 
+        const int current_session_id = archivist.sessionVerify(current_session_id);
+
         archivist.updateLastResponseScore(last_response, user_input);
 
         /**
@@ -25,13 +26,13 @@ namespace Myelin::Core
          * Recuperacao de interacoes anteriores para montar o contexto da solicitacao
          */
         std::vector<float> user_emb;
-        std::string memories = archivist.retrieve(user_input, user_emb);
+        std::string context = archivist.retrieve(user_input, user_emb, current_session_id);
 
         /**
          * Montagem do Prompt
          * Monta a estrutura prompt antes de enviar para inferencia
          */
-        std::string prompt = contextManager.assemble(user_input, memories, n_past);
+        std::string prompt = contextManager.assemble(user_input, context, n_past);
 
         /**
          * Inferência
@@ -50,7 +51,7 @@ namespace Myelin::Core
          * Camada de persistencia (Memoria)
          * Registra entrada e saida + vetor
          */
-        archivist.store(user_input, ai_response, user_emb);
+        archivist.store(current_session_id, user_input, ai_response, user_emb);
 
         last_response = ai_response;
     }
