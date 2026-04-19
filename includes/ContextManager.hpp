@@ -9,6 +9,11 @@ namespace Myelin::Core
     {
     public:
         ContextManager(const std::string &instr_path);
+
+        std::string trim(const std::string &s);
+        std::string clean_str(const std::string &s);
+
+        std::string format_identity_ini(const std::string &ini_path);
         std::string assemble(const std::string &input, const std::string &memories, int n_past);
 
     private:

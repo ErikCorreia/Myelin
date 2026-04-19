@@ -68,8 +68,8 @@ namespace Myelin::Core
         }
 
         // LOG DE CALIBRAÇÃO FINAL
-        std::cout << "[EVAL-DEBUG] Base: 50 | Keyword Pos: " << (has_pos ? "SIM (+30)" : "NAO")
-                  << " | Semantica: " << approval << " | Final: " << score << std::endl;
+        // std::cout << "[EVAL-DEBUG] Base: 50 | Keyword Pos: " << (has_pos ? "SIM (+30)" : "NAO")
+        //           << " | Semantica: " << approval << " | Final: " << score << std::endl;
 
         return std::clamp(score, 0, 100);
     }
