@@ -18,10 +18,12 @@ set(IO_SOURCES
 )
 
 set(CORE_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/core/LlamaEngine.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/core/MyelinEngine.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/core/LlamaProcessor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/core/MemoryArchivist.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/core/ContextManager.cpp
+
     ${CMAKE_CURRENT_SOURCE_DIR}/src/core/EmbeddingEngine.cpp
-    # ${CMAKE_CURRENT_SOURCE_DIR}/src/core/ChatHistory.cpp
-    # ${CMAKE_CURRENT_SOURCE_DIR}/src/io/MemoryManager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/io/DatabaseManager.cpp
 )
 

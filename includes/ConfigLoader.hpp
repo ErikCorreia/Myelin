@@ -1,17 +1,18 @@
 #ifndef CONFIG_LOADER_HPP
-    #define CONFIG_LOADER_HPP
+#define CONFIG_LOADER_HPP
 
-    #include "LlamaEngine.hpp"
-    #include <string>
-    #include <map>
+#include "MyelinEngine.hpp"
+#include <string>
+#include <map>
 
-    using namespace Myelin::Core;
+using namespace Myelin::Core;
 
-    namespace Myelin::IO 
+namespace Myelin::IO
+{
+    class ConfigLoader
     {
-        class ConfigLoader {
-            public:
-                static EngineConfig load_from_file(const std::string& filename);
-        };
-    }
+    public:
+        static EngineConfig load_from_file(const std::string &filename);
+    };
+}
 #endif
