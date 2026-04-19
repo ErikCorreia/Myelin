@@ -36,6 +36,7 @@ namespace Myelin::Core
         LlamaProcessor processor;
         ContextManager contextManager;
         MemoryArchivist archivist;
+        std::string last_response;
     };
 }
 #endif

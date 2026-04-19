@@ -1,8 +1,9 @@
 #include "MyelinEngine.hpp"
-#include "InstructionLoader.hpp"
 #include "MyelinEngine.hpp"
+#include "InstructionLoader.hpp"
 #include "Logger.hpp"
 
+#include <future>
 #include <iostream>
 
 namespace Myelin::Core
@@ -16,6 +17,8 @@ namespace Myelin::Core
     void MyelinEngine::generateResponse(const std::string &user_input, TokenCallback onTokenFound)
     {
         Myelin::IO::Logger::log(Myelin::IO::Logger::INFO, "Myelin: Orquestrando resposta...");
+
+        archivist.updateLastResponseScore(last_response, user_input);
 
         /**
          * Memória e RAG
@@ -48,5 +51,7 @@ namespace Myelin::Core
          * Registra entrada e saida + vetor
          */
         archivist.store(user_input, ai_response, user_emb);
+
+        last_response = ai_response;
     }
 }

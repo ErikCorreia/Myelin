@@ -36,6 +36,7 @@ namespace Myelin::IO
 
         std::string search_semantic_context(const std::vector<float> &query_vector, float threshold, int limit);
         std::string get_recent_chats(int limit);
+        bool update_last_ai_score(int score);
 
         void clear_history();
     };

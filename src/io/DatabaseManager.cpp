@@ -30,6 +30,7 @@ namespace Myelin::IO
             "role TEXT NOT NULL,"
             "content TEXT NOT NULL,"
             "embedding BLOB,"
+            "score INTEGER DEFAULT 50,"
             "timestamp DATETIME DEFAULT CURRENT_TIMESTAMP"
             ");";
         execute_query(sql);
@@ -98,6 +99,21 @@ namespace Myelin::IO
         return history;
     }
 
+    bool DatabaseManager::update_last_ai_score(int score)
+    {
+        std::string sql = "UPDATE chat_history SET score = ? WHERE role = 'assistant' "
+                          "AND id = (SELECT MAX(id) FROM chat_history WHERE role = 'assistant');";
+        sqlite3_stmt *stmt;
+        if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK)
+        {
+            sqlite3_bind_int(stmt, 1, score);
+            sqlite3_step(stmt);
+            sqlite3_finalize(stmt);
+            return true;
+        }
+        return false;
+    }
+
     std::string DatabaseManager::search_keyword_context(const std::string &query, int limit)
     {
         auto keywords = TextProcessor::get_keywords(query);
@@ -139,7 +155,8 @@ namespace Myelin::IO
         auto now = std::chrono::system_clock::now();
         std::time_t now_time = std::chrono::system_clock::to_time_t(now);
 
-        std::string sql = "SELECT role, content, embedding, strftime('%s', timestamp), datetime(timestamp, 'localtime') FROM chat_history WHERE embedding IS NOT NULL;";
+        // Adicionado 'score' na consulta (índice 5)
+        std::string sql = "SELECT role, content, embedding, strftime('%s', timestamp), datetime(timestamp, 'localtime'), score FROM chat_history WHERE embedding IS NOT NULL;";
 
         sqlite3_stmt *stmt;
         if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK)
@@ -148,6 +165,9 @@ namespace Myelin::IO
 
             while (sqlite3_step(stmt) == SQLITE_ROW)
             {
+                // Recupera o score da nova coluna
+                int stored_score = sqlite3_column_int(stmt, 5);
+
                 long long msg_time = sqlite3_column_int64(stmt, 3);
                 float diff_seconds = static_cast<float>(now_time - msg_time);
                 float hours_age = diff_seconds / 3600.0f;
@@ -169,24 +189,28 @@ namespace Myelin::IO
                 const float *float_ptr = static_cast<const float *>(blob_ptr);
                 std::vector<float> stored_vector(float_ptr, float_ptr + blob_size);
 
-                float score = Myelin::Utils::VectorUtils::cosine_similarity(query_vector, stored_vector);
+                // Cálculos de Similaridade e Decaimento
+                float similarity = Myelin::Utils::VectorUtils::cosine_similarity(query_vector, stored_vector);
                 float decay_factor = Myelin::Utils::VectorUtils::time_decay(hours_age, 168.0f);
 
-                float final_score = score * decay_factor;
-
-                // std::cout << "[RAG Debug] Msg: " << content.substr(0, 20)
-                //     << " | Sim: " << score
-                //     << " | Decay: " << decay_factor
-                //     << " | Final: " << final_score << std::endl;
+                // Aplicação do Multiplicador de Recompensa (Score)
+                // 50 é o neutro (1.0x). Valores menores punem a memória, maiores dão bônus.
+                float score_multiplier = (static_cast<float>(stored_score) / 50.0f);
+                float final_score = similarity * decay_factor * score_multiplier;
 
                 if (final_score >= threshold)
                 {
-                    std::string memory_entry = "[Memória de " + date_str + " - " + role + "]: " + content;
+                    // Define o prefixo baseado na qualidade da memória (score < 40 é considerada incerta)
+                    std::string prefix = (stored_score < 40) ? "[Memória Incerta de " : "[Memória de ";
+                    std::string memory_entry = prefix + date_str + " - " + role + "]: " + content;
+
                     matches.push_back({final_score, memory_entry});
                 }
             }
+
             sqlite3_finalize(stmt);
 
+            // Ordena por pontuação final (da maior para a menor)
             std::sort(matches.rbegin(), matches.rend());
 
             for (int i = 0; i < std::min((int)matches.size(), limit); ++i)
